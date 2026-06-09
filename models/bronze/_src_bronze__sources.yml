@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: olist
+    database: olist_raw
+    schema: public
+    tables:
+      - name: orders
+      - name: order_items
+      - name: customers
+      - name: products
+      - name: sellers
+      - name: payments
+      - name: reviews
+      - name: geolocation
+      - name: marketing_qualified_leads
+      - name: closed_deals
