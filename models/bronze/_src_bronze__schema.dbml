@@ -1,0 +1,108 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table stg_olist__orders {
+  order_id text pk
+  customer_id text
+  order_status text
+  purchased_at timestamp
+  approved_at timestamp
+  delivered_carrier_at timestamp
+  delivered_customer_at tiemstamp
+  estimated_delivery_at timestamp
+}
+
+Table stg_olist__customer {
+  customer_unique_id text pk
+  customer_id text
+  customer_zip_code_prefix text
+  customer_city text
+  customer_state text
+}
+
+Table stg_olist__order_items {
+  order_id text
+  item_line_number text
+  product_id textù
+  seller_id text
+  to_be_shipped_at_limit timestamp
+  item_price float
+  item_freight_value float
+}
+
+Table stg_olist__products {
+  product_id text pk
+  product_category_name text
+  product_name_length int
+  product_description_length int
+  product_photos_qty int
+  product_weight_g int
+  product_length_cm int
+  product_height_cm int
+  product_width_cm int
+}
+
+Table stg_olist__sellers {
+  seller_id text pk
+  seller_zip_code_prefix text
+  seller_city text
+  seller_state text
+}
+
+Table stg_olist__payments {
+  order_id text
+  payment_type text
+  total_installments int
+  installment_number int
+  payment_value float
+}
+
+Table stg_olist__reviews {
+  review_id text pk
+  order_id text
+  review_score int
+  review_title text
+  review_message text
+  review_created_at timestamp
+  review_answered_at timestamp
+}
+
+Table stg_olist__geolocation {
+  geolocation_id text pk
+  geolocation_zip_code_prefix text
+  geolocation_lat float
+  geolocation_lng float
+  geolocation_city text
+  geolocation_state text
+}
+
+Table stg_olist__closed_deals {
+    lead_id text pk
+    seller_id text
+    sales_dev_rep_id text
+    sales_rep_id text
+    deal_closed_at timestamp
+    business_segment text
+    lead_type text
+    lead_behavior_profile text
+    has_company boolean
+    has_gtin boolean
+}
+
+Table stg_olist__marketing_leads {
+    lead_id text pk
+    lead_created_at timestamp
+    landing_page_id text
+    lead_origin text
+}
+
+Ref: stg_olist__orders.customer_id > stg_olist__customer.customer_id
+Ref: stg_olist__orders.order_id > stg_olist__order_items.order_id
+Ref: stg_olist__order_items.product_id > stg_olist__products.product_id
+Ref: stg_olist__order_items.seller_id > stg_olist__sellers.seller_id
+Ref: stg_olist__orders.order_id > stg_olist__payments.order_id
+Ref: stg_olist__orders.order_id > stg_olist__reviews.order_id
+Ref: stg_olist__customer.customer_zip_code_prefix > stg_olist__geolocation.geolocation_zip_code_prefix
+Ref: stg_olist__sellers.seller_zip_code_prefix > stg_olist__geolocation.geolocation_zip_code_prefix
+Ref: stg_olist__closed_deals.seller_id > stg_olist__order_items.seller_id
+Ref: stg_olist__closed_deals.lead_id > stg_olist__marketing_leads.lead_id
