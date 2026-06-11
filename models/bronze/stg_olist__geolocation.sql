@@ -1,6 +1,6 @@
 with geolocation as (
     select * from {{ source('olist', 'geolocation') }}
-)
+),
 
 renamed as (
     select

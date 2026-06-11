@@ -9,7 +9,7 @@ customer_orders as (
         delivered_carrier_at,
         delivered_customer_at,
         order_status
-    from {{ ref('int_olist__customer_orders') }}
+    from {{ ref('int_customer_orders') }}
     where order_status in ('delivered', 'shipped') and purchased_at is not null
 ),
 

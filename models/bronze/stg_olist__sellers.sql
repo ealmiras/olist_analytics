@@ -1,6 +1,6 @@
 with sellers as (
     select * from {{ source('olist', 'sellers') }}
-)
+),
 
 renamed as (
     select

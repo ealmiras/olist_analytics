@@ -1,6 +1,6 @@
 with closed_deals as (
     select * from {{ source('olist', 'closed_deals') }}
-)
+),
 
 renamed as (
     select
