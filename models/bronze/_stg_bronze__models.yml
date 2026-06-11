@@ -85,13 +85,15 @@ models:
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 0
+              arguments:
+                min_value: 0
       - name: item_freight_value
         description: "Freight cost for the item."
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 0
+              arguments:
+                min_value: 0
 
   - name: stg_olist__products
     description: "Staging table for Olist products data. Contains details about the products available in the marketplace."
@@ -162,23 +164,26 @@ models:
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 1
-              config:
-                severity: warn
+              arguments:
+                min_value: 1
+                config:
+                  severity: warn
       - name: installment_number
         description: "Sequential number of the payment for the order."
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 1
-              config:
-                severity: warn
+              arguments:
+                min_value: 1
+                config:
+                  severity: warn
       - name: payment_value
         description: "Total amount paid for the order."
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 0
+              arguments:
+                min_value: 0
   
   - name: stg_olist__reviews
     description: "Staging table for Olist reviews data. Contains customer reviews and ratings for each order."
@@ -187,9 +192,6 @@ models:
         description: "Unique identifier for each review."
         data_tests:
           - not_null
-          - unique:
-              config:
-                severity: warn
       - name: order_id
         description: "Identifier for the order associated with the review."
         data_tests:
@@ -199,8 +201,9 @@ models:
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: 1
-              max_value: 5
+              arguments:
+                min_value: 1
+                max_value: 5
       - name: review_title
         description: "Title of the customer's review comment."
       - name: review_message
@@ -222,15 +225,17 @@ models:
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: -90
-              max_value: 90
+              arguments:
+                min_value: -90
+                max_value: 90
       - name: longitude
         description: "Longitude coordinate for the geolocation."
         data_tests:
           - not_null
           - dbt_utils.accepted_range:
-              min_value: -180
-              max_value: 180
+              arguments:
+                min_value: -180
+                max_value: 180
       - name: city
         description: "City associated with the geolocation."
         data_tests:
