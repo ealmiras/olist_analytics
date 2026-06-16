@@ -19,7 +19,7 @@ models:
           - accepted_values:
               arguments:
                 values: ['invoiced', 'created', 'processing', 'canceled', 'delivered', 'approved', 'unavailable', 'shipped']
-      - name: purchased_at
+      - name: order_date
         description: "Timestamp when the order was placed."
         data_tests:
           - not_null

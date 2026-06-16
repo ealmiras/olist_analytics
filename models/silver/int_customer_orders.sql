@@ -15,7 +15,7 @@ joined as (
         c.customer_city,
         c.customer_state,
         o.order_status,
-        o.purchased_at,
+        o.order_date,
         o.approved_at,
         o.delivered_carrier_at,
         o.delivered_customer_at,

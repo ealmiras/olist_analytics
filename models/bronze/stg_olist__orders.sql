@@ -7,7 +7,7 @@ renamed as (
         order_id,
         customer_id,
         order_status,
-        order_purchase_timestamp as purchased_at,
+        order_purchase_timestamp as order_date,
         order_approved_at as approved_at,
         order_delivered_carrier_date as delivered_carrier_at,
         order_delivered_customer_date as delivered_customer_at,

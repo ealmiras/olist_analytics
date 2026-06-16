@@ -5,10 +5,10 @@ Table stg_olist__orders {
   order_id text pk
   customer_id text
   order_status text
-  purchased_at timestamp
+  order_date timestamp
   approved_at timestamp
   delivered_carrier_at timestamp
-  delivered_customer_at tiemstamp
+  delivered_customer_at timestamp
   estimated_delivery_at timestamp
 }
 
