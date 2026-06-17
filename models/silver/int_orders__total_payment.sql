@@ -3,7 +3,7 @@ orders as (
     select
         order_id,
         order_date,
-        customer_id,
+        customer_unique_id,
         order_status,
         item_line_number,
         item_price,
@@ -24,7 +24,7 @@ final as (
     select
         oi.order_id,
         oi.order_date,
-        oi.customer_id,
+        oi.customer_unique_id,
         oi.order_status,
         count(oi.item_line_number) as item_count,
         sum(oi.item_price) as total_item_price,
@@ -40,7 +40,7 @@ final as (
         end as installment_status
     from orders oi
     left join payments p on p.order_id = oi.order_id
-    group by oi.order_id, oi.order_date, oi.customer_id, oi.order_status
+    group by oi.order_id, oi.order_date, oi.customer_unique_id, oi.order_status
 )
 
 select * from final

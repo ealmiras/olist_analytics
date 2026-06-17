@@ -11,12 +11,15 @@ products as (
 sellers as (
     select * from {{ ref('stg_olist__sellers') }}
 ),
+customers as (
+    select * from {{ ref('stg_olist__customers') }}
+),
 
 final as (
     select
         oi.order_id,
         o.order_date,
-        o.customer_id,
+        c.customer_unique_id,
         o.order_status,
         oi.item_line_number,
         oi.product_id,
@@ -33,6 +36,7 @@ final as (
     left join orders o on o.order_id = oi.order_id
     left join products p on p.product_id = oi.product_id
     left join sellers s on s.seller_id = oi.seller_id
+    left join customers c on c.customer_id = o.customer_id
 )
 
 select * from final
