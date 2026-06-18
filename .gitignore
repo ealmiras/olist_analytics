@@ -3,4 +3,3 @@ target/
 dbt_packages/
 logs/
 sources/
-project_structure.txt
