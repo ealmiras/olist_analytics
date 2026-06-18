@@ -44,3 +44,11 @@ jobs:
           name: production-manifest
           path: target/manifest.json
           retention-days: 90
+
+      - name: Generate dbt docs
+        run: dbt docs generate --profiles-dir . --target prod
+
+      - name: Copy docs to /docs folder
+        run: |
+          mkdir -p docs
+          cp target/index.html target/manifest.json target/catalog.json docs/
