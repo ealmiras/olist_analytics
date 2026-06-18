@@ -119,6 +119,16 @@ Two GitHub Actions workflows:
 
 Required GitHub repository secrets: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PASSWORD`.
 
+## Known Data Issues
+
+| Issue | Scale | Handling |
+|-------|-------|----------|
+| Delivery timestamps (`delivered_carrier_at`, `delivered_customer_at`) precede `order_date` | 166 orders | Nulled out in `stg_olist__orders` |
+| `review_id` is not unique — same ID appears across multiple orders | 789 duplicates | `unique` test removed; `fct_orders` deduplicates by `order_id` |
+| One order per `customer_id` — a customer placing N orders gets N distinct `customer_id` values | By design | `customer_unique_id` is used as the stable customer identifier throughout |
+| One closed deal record has a negative `days_to_close` (deal date precedes lead creation date) | 1 record | Range test downgraded to `severity: warn` in `fct_marketing_funnel` |
+| Some delivered orders have null delivery timestamps in the source | ~10 records | `not_null` tests on delivery columns downgraded to `severity: warn` in `int_orders__delivery_performance` |
+
 ## Data Sources
 
 Raw tables in `olist_raw.public`:
