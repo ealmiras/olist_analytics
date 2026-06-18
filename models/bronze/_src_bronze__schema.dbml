@@ -1,7 +1,6 @@
 // Use DBML to define your database structure
 // Docs: https://dbml.dbdiagram.io/docs
 
-
 Table stg_olist__orders {
   order_id text [pk]
   customer_id text
