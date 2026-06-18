@@ -26,3 +26,12 @@ models:
     gold:
       +materialized: table
       +schema: gold
+
+seeds:
+  olist_analytics:
+    +schema: seeds
+
+snapshots:
+  olist_analytics:
+    +target_schema: snapshots
+    +target_database: olist_analytics_dev
