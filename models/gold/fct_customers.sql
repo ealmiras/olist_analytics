@@ -8,7 +8,7 @@ order_spend as (
         order_id,
         sum(item_price) as order_spend
     from {{ ref('int_order_items__enriched') }}
-    where order_status in ('invoiced', 'delivered', 'approved', 'shipped')
+    where order_status in {{ active_order_statuses() }}
     group by customer_unique_id, order_id
 ),
 

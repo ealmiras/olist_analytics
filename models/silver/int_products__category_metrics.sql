@@ -1,7 +1,7 @@
 with
 order_items as (
     select * from {{ ref('int_order_items__enriched') }}
-    where order_status in ('invoiced', 'delivered', 'approved', 'shipped')
+    where order_status in {{ active_order_statuses() }}
 ),
 
 final as (

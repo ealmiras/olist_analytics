@@ -11,7 +11,7 @@ order_items as (
         avg(item_price)            as avg_item_price,
         avg(item_freight_value)    as avg_freight_value
     from {{ ref('int_order_items__enriched') }}
-    where order_status in ('invoiced', 'delivered', 'approved', 'shipped')
+    where order_status in {{ active_order_statuses() }}
     group by seller_id
 ),
 
