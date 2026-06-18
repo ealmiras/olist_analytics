@@ -90,6 +90,49 @@ models:
       - name: has_gtin
         description: "Whether the seller has a GTIN for their products."
 
+  - name: fct_customer_churn_features
+    description: "One row per unique customer. ML-ready feature table for churn modelling, built from fct_customers using a Python model. Recency and velocity features are relative to the most recent order date in the dataset."
+    columns:
+      - name: customer_unique_id
+        description: "Stable customer identifier."
+        data_tests:
+          - not_null
+          - unique
+      - name: days_since_last_order
+        description: "Days between the customer's last order and the dataset reference date (max last_order_date across all customers)."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: days_active
+        description: "Days between the customer's first and last order. Zero for single-order customers."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: total_orders
+        description: "Total number of orders placed."
+        data_tests:
+          - not_null
+      - name: total_customer_spend
+        description: "Sum of item prices across active orders."
+      - name: spend_per_order
+        description: "Average spend per order (total_customer_spend / total_orders)."
+      - name: spend_quartile
+        description: "Spend bucket from 1 (lowest) to 4 (highest) based on total_customer_spend quartiles across all customers."
+      - name: avg_days_between_orders
+        description: "Average days between consecutive orders. Null for single-order customers."
+      - name: order_velocity_30d
+        description: "Orders per 30-day period over the customer's active window. Null for single-order customers."
+      - name: avg_delivery_time
+        description: "Average days from order placement to delivery."
+      - name: is_churned
+        description: "True if the customer has not ordered in the 180 days prior to the reference date."
+        data_tests:
+          - not_null
+
   - name: fct_customers
     description: "One row per unique customer. Aggregates all orders into lifetime metrics including spend, order frequency, delivery time, and customer type. City and state reflect the customer's most recent order location."
     columns:
