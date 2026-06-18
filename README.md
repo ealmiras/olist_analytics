@@ -1,6 +1,6 @@
 # Olist Analytics
 
-A dbt project that models the [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) on Snowflake. The pipeline transforms raw transactional data into analytics-ready fact and dimension tables covering customers, orders, sellers, products, and marketing.
+A dbt project that models the [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) combining with the [Marketing Funnel Dataset by Olist](https://www.kaggle.com/datasets/olistbr/marketing-funnel-olist) on Snowflake. The pipeline transforms raw transactional data into analytics-ready fact and dimension tables covering customers, orders, sellers, products, and marketing.
 
 ## Tech Stack
 
