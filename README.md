@@ -1,15 +1,137 @@
-Welcome to your new dbt project!
+# Olist Analytics
 
-### Using the starter project
+A dbt project that models the [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) on Snowflake. The pipeline transforms raw transactional data into analytics-ready fact and dimension tables covering customers, orders, sellers, products, and marketing.
 
-Try running the following commands:
-- dbt run
-- dbt test
+## Tech Stack
 
+- **dbt** 1.11 + **dbt-utils** 1.3.3
+- **Snowflake**
+- **GitHub Actions** for CI/CD
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+## Architecture
+
+Three-layer medallion architecture, all sourced from `olist_raw.public`.
+
+```
+olist_raw.public  (source)
+      │
+      ▼
+   Bronze          views   stg_olist__*        rename + light cleaning
+      │
+      ▼
+   Silver          views   int_<domain>__*     joins, enrichment, business logic
+      │
+      ▼
+    Gold           tables  fct_* / dim_*       analytics-ready facts & dims
+```
+
+### Gold Layer
+
+| Model | Grain | Description |
+|-------|-------|-------------|
+| `fct_customers` | customer | Lifetime order metrics, spend, delivery time, customer type |
+| `fct_orders` | order | Payment reconciliation, delivery performance, review score |
+| `fct_seller_performance` | seller | GMV, order count, lead acquisition channel |
+| `fct_marketing_funnel` | lead | Conversion flag, days to close |
+| `fct_customer_churn_features` | customer | ML-ready churn feature table (Python model) |
+| `dim_customers` | customer | Identity, location, coordinates |
+| `dim_products` | product | Attributes + English category name |
+| `dim_sellers` | seller | Location + lead attributes |
+
+## Setup
+
+### Prerequisites
+
+- Python 3.11+
+- A Snowflake account with databases `olist_raw` (source), `olist_analytics_dev`, and `olist_analytics_prod`
+
+### Installation
+
+```bash
+pip install -r requirements.txt
+dbt deps
+```
+
+### Profiles
+
+Add the `olist_analytics` profile to `~/.dbt/profiles.yml`:
+
+```yaml
+olist_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: ACCOUNTADMIN
+      warehouse: transforming
+      database: olist_analytics_dev
+      schema: dev_dbt
+      threads: 4
+```
+
+Set the required environment variables before running:
+
+```bash
+export SNOWFLAKE_ACCOUNT=your_account
+export SNOWFLAKE_USER=your_user
+export SNOWFLAKE_PASSWORD=your_password
+```
+
+### Running the project
+
+```bash
+dbt seed          # load reference data (product category translations)
+dbt snapshot      # capture order status history
+dbt build         # run all models + tests
+```
+
+## Development
+
+```bash
+# build and test a single layer
+dbt build --select silver
+
+# build a model and all downstream dependents
+dbt build --select fct_customers+
+
+# run only singular tests
+dbt test --select test_type:singular
+```
+
+## Testing
+
+The project has two types of tests:
+
+- **Schema tests** (YAML) — `not_null`, `unique`, `accepted_values`, `dbt_utils.accepted_range` applied at column level. Known source data issues are downgraded to `severity: warn`.
+- **Singular tests** (`tests/`) — custom SQL assertions for cross-model consistency and temporal logic (e.g. delivery timestamps after order date, customer counts matching between silver and gold).
+
+## CI/CD
+
+Two GitHub Actions workflows:
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| `ci.yml` | Pull request to `main` | Slim CI — builds only changed models and their downstream dependents (`state:modified+`) against `olist_analytics_dev.ci_dbt` |
+| `cd.yml` | Push to `main` | Full production build (seed → snapshot → build) against `olist_analytics_prod` |
+
+Required GitHub repository secrets: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PASSWORD`.
+
+## Data Sources
+
+Raw tables in `olist_raw.public`:
+
+| Table | Description |
+|-------|-------------|
+| `orders` | Order header with status and timestamps |
+| `order_items` | Line items per order |
+| `customers` | Customer per-order identity and location |
+| `products` | Product catalogue with dimensions |
+| `sellers` | Seller identity and location |
+| `payments` | Payment method and installment details |
+| `reviews` | Customer review scores and text |
+| `geolocation` | Lat/lon coordinates per zip code prefix |
+| `marketing_qualified_leads` | Inbound leads from marketing channels |
+| `closed_deals` | Leads that converted to seller accounts |

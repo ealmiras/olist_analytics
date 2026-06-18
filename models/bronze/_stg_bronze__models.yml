@@ -104,11 +104,13 @@ models:
           - not_null
           - unique
       - name: product_category_name
-        description: "Category of the product."
+        description: "Category of the product in Portuguese."
         data_tests:
           - not_null:
               config:
                 severity: warn
+      - name: product_category_name_english
+        description: "English translation of product_category_name, joined from the product_category_translations seed. Null if no translation exists for the category."
       - name: product_name_length
         description: "Length of the product name."
       - name: product_description_length

@@ -2,7 +2,7 @@
 // Docs: https://dbml.dbdiagram.io/docs
 
 Table stg_olist__orders {
-  order_id text pk
+  order_id text [pk]
   customer_id text
   order_status text
   order_date timestamp
@@ -12,8 +12,8 @@ Table stg_olist__orders {
   estimated_delivery_at timestamp
 }
 
-Table stg_olist__customer {
-  customer_id text pk
+Table stg_olist__customers {
+  customer_id text [pk]
   customer_unique_id text
   customer_zip_code_prefix text
   customer_city text
@@ -22,8 +22,8 @@ Table stg_olist__customer {
 
 Table stg_olist__order_items {
   order_id text
-  item_line_number text
-  product_id textù
+  item_line_number int
+  product_id text
   seller_id text
   to_be_shipped_at_limit timestamp
   item_price float
@@ -31,8 +31,9 @@ Table stg_olist__order_items {
 }
 
 Table stg_olist__products {
-  product_id text pk
+  product_id text [pk]
   product_category_name text
+  product_category_name_english text
   product_name_length int
   product_description_length int
   product_photos_qty int
@@ -43,7 +44,7 @@ Table stg_olist__products {
 }
 
 Table stg_olist__sellers {
-  seller_id text pk
+  seller_id text [pk]
   seller_zip_code_prefix text
   seller_city text
   seller_state text
@@ -58,7 +59,7 @@ Table stg_olist__payments {
 }
 
 Table stg_olist__reviews {
-  review_id text pk
+  review_id text [note: 'not unique in source — duplicate review_ids exist across orders']
   order_id text
   review_score int
   review_title text
@@ -68,41 +69,40 @@ Table stg_olist__reviews {
 }
 
 Table stg_olist__geolocation {
-  geolocation_id text pk
-  geolocation_zip_code_prefix text
-  geolocation_lat float
-  geolocation_lng float
-  geolocation_city text
-  geolocation_state text
+  zip_code_prefix text [note: 'not unique — multiple lat/lon entries per prefix']
+  latitude float
+  longitude float
+  city text
+  state text
 }
 
 Table stg_olist__closed_deals {
-    lead_id text pk
-    seller_id text
-    sales_dev_rep_id text
-    sales_rep_id text
-    deal_closed_at timestamp
-    business_segment text
-    lead_type text
-    lead_behavior_profile text
-    has_company boolean
-    has_gtin boolean
+  lead_id text [pk]
+  seller_id text
+  sales_dev_rep_id text
+  sales_rep_id text
+  closed_date timestamp
+  business_segment text
+  lead_type text
+  lead_behaviour_profile text
+  has_company boolean
+  has_gtin boolean
 }
 
 Table stg_olist__marketing_leads {
-    lead_id text pk
-    lead_created_at timestamp
-    landing_page_id text
-    lead_origin text
+  lead_id text [pk]
+  lead_created_at timestamp
+  landing_page_id text
+  lead_origin text
 }
 
-Ref: stg_olist__orders.customer_id > stg_olist__customer.customer_id
+Ref: stg_olist__orders.customer_id > stg_olist__customers.customer_id
 Ref: stg_olist__orders.order_id > stg_olist__order_items.order_id
 Ref: stg_olist__order_items.product_id > stg_olist__products.product_id
 Ref: stg_olist__order_items.seller_id > stg_olist__sellers.seller_id
 Ref: stg_olist__orders.order_id > stg_olist__payments.order_id
 Ref: stg_olist__orders.order_id > stg_olist__reviews.order_id
-Ref: stg_olist__customer.customer_zip_code_prefix > stg_olist__geolocation.geolocation_zip_code_prefix
-Ref: stg_olist__sellers.seller_zip_code_prefix > stg_olist__geolocation.geolocation_zip_code_prefix
-Ref: stg_olist__closed_deals.seller_id > stg_olist__order_items.seller_id
+Ref: stg_olist__customers.customer_zip_code_prefix > stg_olist__geolocation.zip_code_prefix
+Ref: stg_olist__sellers.seller_zip_code_prefix > stg_olist__geolocation.zip_code_prefix
+Ref: stg_olist__closed_deals.seller_id > stg_olist__sellers.seller_id
 Ref: stg_olist__closed_deals.lead_id > stg_olist__marketing_leads.lead_id
