@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-ci:
+    runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: dbt deps
+        run: dbt deps --profiles-dir .
+
+      - name: Download production manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: production-manifest
+          path: prod-manifest/
+        continue-on-error: true  # first run won't have a manifest yet
+
+      - name: dbt build (slim CI)
+        run: |
+          if [ -f prod-manifest/manifest.json ]; then
+            echo "Production manifest found — running slim CI"
+            dbt build \
+              --profiles-dir . \
+              --select state:modified+ \
+              --defer \
+              --state prod-manifest/
+          else
+            echo "No production manifest found — running full build"
+            dbt build --profiles-dir .
+          fi
+
+      - name: Upload CI manifest
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-manifest
+          path: target/manifest.json
+          retention-days: 7

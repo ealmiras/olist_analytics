@@ -1,0 +1,46 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dbt-prod:
+    runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: dbt deps
+        run: dbt deps --profiles-dir .
+
+      - name: dbt seed
+        run: dbt seed --profiles-dir . --target prod
+
+      - name: dbt snapshot
+        run: dbt snapshot --profiles-dir . --target prod
+
+      - name: dbt build
+        run: dbt build --profiles-dir . --target prod
+
+      - name: Upload production manifest
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-manifest
+          path: target/manifest.json
+          retention-days: 90
