@@ -1,4 +1,95 @@
 models:
+  - name: dim_customers
+    description: "One row per unique customer. Contains identity, location, and coordinates. Intended as the customer dimension for joins from fact tables."
+    columns:
+      - name: customer_unique_id
+        description: "Stable customer identifier shared across all orders."
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_zip_code_prefix
+        description: "Zip code prefix of the customer's address."
+        data_tests:
+          - not_null
+      - name: customer_city
+        description: "City of the customer's address."
+      - name: customer_state
+        description: "State of the customer's address."
+      - name: latitude
+        description: "Averaged latitude for the customer's zip code prefix. Null if zip code not found in geolocation."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -90
+                max_value: 90
+      - name: longitude
+        description: "Averaged longitude for the customer's zip code prefix. Null if zip code not found in geolocation."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -180
+                max_value: 180
+
+  - name: dim_products
+    description: "One row per product. Contains all product attributes including category, dimensions, and content metadata."
+    columns:
+      - name: product_id
+        description: "Unique identifier for the product."
+        data_tests:
+          - not_null
+          - unique
+      - name: product_category_name
+        description: "Category of the product. Null for a small number of uncategorised products."
+      - name: product_name_length
+        description: "Character length of the product name."
+      - name: product_description_length
+        description: "Character length of the product description."
+      - name: product_photos_qty
+        description: "Number of photos available for the product."
+      - name: product_weight_g
+        description: "Weight of the product in grams."
+      - name: product_length_cm
+        description: "Length of the product in centimetres."
+      - name: product_height_cm
+        description: "Height of the product in centimetres."
+      - name: product_width_cm
+        description: "Width of the product in centimetres."
+
+  - name: dim_sellers
+    description: "One row per seller. Contains seller location and lead acquisition attributes. Intended as the seller dimension for joins from fact tables."
+    columns:
+      - name: seller_id
+        description: "Unique identifier for the seller."
+        data_tests:
+          - not_null
+          - unique
+      - name: seller_zip_code_prefix
+        description: "Zip code prefix of the seller's address."
+        data_tests:
+          - not_null
+      - name: seller_city
+        description: "City of the seller."
+      - name: seller_state
+        description: "State of the seller."
+      - name: lead_id
+        description: "Identifier for the seller's marketing qualified lead. Null if no lead exists."
+      - name: lead_origin
+        description: "Acquisition channel for the lead (e.g. organic_search, paid_search, social). Null if no lead exists."
+      - name: lead_created_at
+        description: "Timestamp when the lead was created. Null if no lead exists."
+      - name: closed_date
+        description: "Timestamp when the deal was closed. Null if no closed deal exists."
+      - name: business_segment
+        description: "Business segment of the seller (e.g. home_decor, health_beauty). Null if no closed deal exists."
+      - name: lead_type
+        description: "Type of lead (e.g. online_top, online_beginner). Null if no closed deal exists."
+      - name: lead_behaviour_profile
+        description: "Behavioral profile of the lead. May contain multiple comma-separated values. Null if no closed deal exists."
+      - name: has_company
+        description: "Whether the seller has formal company documentation."
+      - name: has_gtin
+        description: "Whether the seller has a GTIN for their products."
+
   - name: fct_customers
     description: "One row per unique customer. Aggregates all orders into lifetime metrics including spend, order frequency, delivery time, and customer type. City and state reflect the customer's most recent order location."
     columns:
