@@ -73,7 +73,7 @@ models:
         data_tests:
           - not_null
       - name: seller_id
-        description: "Identifier for the seller of the product."
+        description: "Identifier for the seller of the product. Within an order there can be multiple sellers, each selling different products."
         data_tests:
           - not_null
       - name: to_be_shipped_at_limit

@@ -33,11 +33,17 @@ final as (
         max(p.payment_value) as total_payment_value,
         max(p.total_installments) as total_installments,
         max(p.installment_number) as paid_installments,
-        case 
-            when max(p.installment_number) = max(p.total_installments) 
-            then 'completed' 
-            else 'ongoing' 
-        end as installment_status
+        case
+            when max(p.installment_number) = max(p.total_installments)
+            then 'completed'
+            else 'ongoing'
+        end as installment_status,
+        max(p.payment_value) - (sum(oi.item_price) + sum(oi.item_freight_value)) as payment_difference,
+        case
+            when abs((sum(oi.item_price) + sum(oi.item_freight_value)) - max(p.payment_value)) < 0.01
+            then 'reconciled'
+            else 'unreconciled'
+        end as reconciliation_status
     from orders oi
     left join payments p on p.order_id = oi.order_id
     group by oi.order_id, oi.order_date, oi.customer_unique_id, oi.order_status

@@ -1,0 +1,349 @@
+models:
+  - name: int_customers__order_detail
+    description: "Orders joined with customer data. One row per order, with customer identity and location fields attached."
+    columns:
+      - name: order_id
+        description: "Unique identifier for each order."
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Per-order customer identifier (not unique across orders)."
+        data_tests:
+          - not_null
+      - name: customer_unique_id
+        description: "Stable customer identifier shared across all of a customer's orders."
+        data_tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: "Zip code prefix of the customer's address."
+      - name: customer_city
+        description: "City of the customer's address."
+      - name: customer_state
+        description: "State of the customer's address."
+      - name: order_status
+        description: "Current status of the order."
+        data_tests:
+          - not_null
+      - name: order_date
+        description: "Timestamp when the order was placed."
+        data_tests:
+          - not_null
+      - name: approved_at
+        description: "Timestamp when the order was approved."
+      - name: delivered_carrier_at
+        description: "Timestamp when the order was handed to the carrier."
+      - name: delivered_customer_at
+        description: "Timestamp when the order was delivered to the customer."
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp."
+
+  - name: int_order_items__enriched
+    description: "Order items joined with orders, products, sellers, and customers. One row per order line item."
+    columns:
+      - name: order_id
+        description: "Identifier for the order."
+        data_tests:
+          - not_null
+      - name: order_date
+        description: "Timestamp when the order was placed."
+      - name: customer_unique_id
+        description: "Stable customer identifier."
+      - name: order_status
+        description: "Current status of the order."
+        data_tests:
+          - not_null
+      - name: item_line_number
+        description: "Sequential line number of the item within the order."
+        data_tests:
+          - not_null
+      - name: product_id
+        description: "Identifier for the product."
+        data_tests:
+          - not_null
+      - name: product_category_name
+        description: "Category of the product."
+      - name: seller_id
+        description: "Identifier for the seller."
+        data_tests:
+          - not_null
+      - name: seller_city
+        description: "City of the seller."
+      - name: item_price
+        description: "Price of the item."
+        data_tests:
+          - not_null
+      - name: item_freight_value
+        description: "Freight cost for the item."
+        data_tests:
+          - not_null
+      - name: to_be_shipped_at_limit
+        description: "Deadline for shipping the item."
+      - name: delivered_carrier_at
+        description: "Timestamp when the order was handed to the carrier."
+      - name: delivered_customer_at
+        description: "Timestamp when the order was delivered to the customer."
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp."
+
+  - name: int_orders__total_payment
+    description: "Per-order aggregation of items and payments. One row per order with total values and installment status."
+    columns:
+      - name: order_id
+        description: "Unique identifier for the order."
+        data_tests:
+          - not_null
+          - unique
+      - name: order_date
+        description: "Timestamp when the order was placed."
+      - name: customer_unique_id
+        description: "Stable customer identifier."
+      - name: order_status
+        description: "Current status of the order."
+      - name: item_count
+        description: "Number of line items in the order."
+      - name: total_item_price
+        description: "Sum of all item prices in the order."
+      - name: total_freight_value
+        description: "Sum of all freight costs in the order."
+      - name: total_order_value
+        description: "Total item price plus total freight value."
+      - name: total_payment_value
+        description: "Total amount paid as recorded in the payments table."
+      - name: total_installments
+        description: "Total number of installments for the payment."
+      - name: paid_installments
+        description: "Number of installments paid so far."
+      - name: installment_status
+        description: "Whether all installments have been paid. Values: completed, ongoing."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['completed', 'ongoing']
+      - name: payment_difference
+        description: "Difference between total_payment_value and total_order_value."
+      - name: reconciliation_status
+        description: "Whether the payment matches the order total within 0.01. Values: reconciled, unreconciled."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['reconciled', 'unreconciled']
+
+  - name: int_orders__delivery_performance
+    description: "Delivery time breakdown for delivered orders. One row per delivered order with time-in-transit components and on-time flag."
+    columns:
+      - name: order_id
+        description: "Unique identifier for the order."
+        data_tests:
+          - not_null
+          - unique
+      - name: order_date
+        description: "Timestamp when the order was placed."
+        data_tests:
+          - not_null
+      - name: delivered_carrier_at
+        description: "Timestamp when the order was handed to the carrier. Null for a small number of delivered orders with incomplete source data."
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: delivered_customer_at
+        description: "Timestamp when the order was delivered to the customer. Null for a small number of delivered orders with incomplete source data."
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp."
+        data_tests:
+          - not_null
+      - name: time_to_carrier
+        description: "Days from order placement to carrier handoff."
+      - name: time_to_customer
+        description: "Days from carrier handoff to customer delivery."
+      - name: total_delivery_time
+        description: "Days from order placement to customer delivery."
+      - name: estimated_delivery_time
+        description: "Days from order placement to estimated delivery date."
+      - name: delivery_performance
+        description: "Whether the order arrived on or before the estimated date. Values: on_time, late."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['on_time', 'late']
+
+  - name: int_sellers__closed_leads
+    description: "Sellers joined with their closed deal and marketing lead data. One row per seller."
+    columns:
+      - name: seller_id
+        description: "Unique identifier for the seller."
+        data_tests:
+          - not_null
+          - unique
+      - name: seller_zip_code_prefix
+        description: "Zip code prefix of the seller's address."
+      - name: seller_city
+        description: "City of the seller."
+      - name: seller_state
+        description: "State of the seller."
+      - name: lead_id
+        description: "Identifier for the associated marketing qualified lead. Null if no lead exists."
+      - name: lead_created_at
+        description: "Timestamp when the lead was first contacted."
+      - name: landing_page_id
+        description: "Identifier for the landing page that generated the lead."
+      - name: lead_origin
+        description: "Acquisition channel for the lead (e.g. organic_search, paid_search, social)."
+      - name: closed_date
+        description: "Timestamp when the deal was closed."
+      - name: business_segment
+        description: "Business segment of the seller (e.g. home_decor, health_beauty)."
+      - name: lead_type
+        description: "Type of lead (e.g. online_top, online_beginner)."
+      - name: lead_behaviour_profile
+        description: "Behavioral profile of the lead (e.g. shark, cat, eagle). May contain multiple values separated by commas."
+      - name: has_company
+        description: "Whether the seller has formal company documentation."
+      - name: has_gtin
+        description: "Whether the seller has a GTIN for their products."
+
+  - name: int_reviews__order_enriched
+    description: "Customer reviews joined with order and customer context. One row per review."
+    columns:
+      - name: review_id
+        description: "Review identifier. Not unique in the source — the Olist dataset contains duplicate review_ids across different orders."
+        data_tests:
+          - not_null
+      - name: order_id
+        description: "Identifier for the reviewed order."
+        data_tests:
+          - not_null
+      - name: customer_unique_id
+        description: "Stable customer identifier."
+      - name: customer_city
+        description: "City of the reviewing customer."
+      - name: customer_state
+        description: "State of the reviewing customer."
+      - name: order_status
+        description: "Status of the reviewed order."
+      - name: order_date
+        description: "Timestamp when the order was placed."
+      - name: delivered_customer_at
+        description: "Timestamp when the order was delivered to the customer."
+      - name: review_score
+        description: "Numeric rating given by the customer, 1 to 5."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 5
+      - name: review_title
+        description: "Title of the customer's written review."
+      - name: review_message
+        description: "Body text of the customer's written review."
+      - name: review_created_at
+        description: "Timestamp when the review was submitted."
+      - name: review_answered_at
+        description: "Timestamp when the review was answered by the seller."
+      - name: has_written_review
+        description: "True if the customer left a title or message, false if score-only."
+        data_tests:
+          - not_null
+      - name: days_to_review
+        description: "Days between delivery and review submission. Null for undelivered orders."
+
+  - name: int_customers__geolocation
+    description: "Customers enriched with lat/lon coordinates derived from their zip code prefix. Multiple geolocation entries per zip code are averaged to a centroid."
+    columns:
+      - name: customer_id
+        description: "Per-order customer identifier."
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_unique_id
+        description: "Stable customer identifier shared across all orders."
+        data_tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: "Zip code prefix of the customer's address."
+        data_tests:
+          - not_null
+      - name: customer_city
+        description: "City of the customer's address."
+      - name: customer_state
+        description: "State of the customer's address."
+      - name: latitude
+        description: "Averaged latitude for the customer's zip code prefix. Null if zip code not found in geolocation."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -90
+                max_value: 90
+      - name: longitude
+        description: "Averaged longitude for the customer's zip code prefix. Null if zip code not found in geolocation."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -180
+                max_value: 180
+
+  - name: int_payments__order_detail
+    description: "Unaggregated payments joined with order context. One row per installment, preserving payment method mix and installment sequence."
+    columns:
+      - name: order_id
+        description: "Identifier for the order."
+        data_tests:
+          - not_null
+      - name: order_status
+        description: "Current status of the order."
+      - name: order_date
+        description: "Timestamp when the order was placed."
+      - name: payment_type
+        description: "Payment method used (e.g. credit_card, boleto, voucher, debit_card)."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'boleto', 'voucher', 'debit_card']
+      - name: installment_number
+        description: "Sequential number of this installment within the order's payment."
+        data_tests:
+          - not_null
+      - name: total_installments
+        description: "Total number of installments for this payment."
+        data_tests:
+          - not_null
+      - name: payment_value
+        description: "Amount paid in this installment."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: int_products__category_metrics
+    description: "Aggregated metrics per product category across active orders. One row per category."
+    columns:
+      - name: product_category_name
+        description: "Product category name. Null rows represent products with no category assigned."
+      - name: total_orders
+        description: "Number of distinct orders containing items from this category."
+        data_tests:
+          - not_null
+      - name: total_products
+        description: "Number of distinct products sold in this category."
+        data_tests:
+          - not_null
+      - name: total_sellers
+        description: "Number of distinct sellers who sold items in this category."
+        data_tests:
+          - not_null
+      - name: avg_item_price
+        description: "Average item price across all line items in this category."
+      - name: avg_freight_value
+        description: "Average freight cost across all line items in this category."
+      - name: total_revenue
+        description: "Sum of all item prices in this category."
