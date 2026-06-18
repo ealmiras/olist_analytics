@@ -1,0 +1,201 @@
+models:
+  - name: fct_customers
+    description: "One row per unique customer. Aggregates all orders into lifetime metrics including spend, order frequency, delivery time, and customer type. City and state reflect the customer's most recent order location."
+    columns:
+      - name: customer_unique_id
+        description: "Stable customer identifier shared across all orders."
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_city
+        description: "City from the customer's most recent order."
+      - name: customer_state
+        description: "State from the customer's most recent order."
+      - name: total_orders
+        description: "Total number of orders placed by the customer across all statuses."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+      - name: total_customer_spend
+        description: "Sum of item prices across active orders (invoiced, delivered, approved, shipped). Excludes freight."
+      - name: customer_type
+        description: "Whether the customer has placed more than one order. Values: new, returning."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['new', 'returning']
+      - name: first_order_date
+        description: "Timestamp of the customer's earliest order."
+        data_tests:
+          - not_null
+      - name: last_order_date
+        description: "Timestamp of the customer's most recent order."
+        data_tests:
+          - not_null
+      - name: avg_days_between_orders
+        description: "Average number of days between consecutive orders. Null for customers with only one order."
+      - name: avg_delivery_time
+        description: "Average days from order placement to delivery. For shipped orders missing delivery timestamps, city average is used as a fallback. Null if no delivered or shipped orders exist."
+
+  - name: fct_orders
+    description: "One row per order. Combines order details, payment reconciliation, delivery performance, and customer review into a single analytics-ready record."
+    columns:
+      - name: order_id
+        description: "Unique identifier for the order."
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_unique_id
+        description: "Stable customer identifier."
+        data_tests:
+          - not_null
+      - name: customer_city
+        description: "City of the customer who placed the order."
+      - name: customer_state
+        description: "State of the customer who placed the order."
+      - name: order_status
+        description: "Current status of the order."
+        data_tests:
+          - not_null
+      - name: order_date
+        description: "Timestamp when the order was placed."
+        data_tests:
+          - not_null
+      - name: approved_at
+        description: "Timestamp when the order was approved."
+      - name: delivered_carrier_at
+        description: "Timestamp when the order was handed to the carrier."
+      - name: delivered_customer_at
+        description: "Timestamp when the order was delivered to the customer."
+      - name: estimated_delivery_at
+        description: "Estimated delivery timestamp."
+      - name: item_count
+        description: "Number of line items in the order."
+      - name: total_item_price
+        description: "Sum of all item prices in the order."
+      - name: total_freight_value
+        description: "Sum of all freight costs in the order."
+      - name: total_order_value
+        description: "Total item price plus freight."
+      - name: total_payment_value
+        description: "Total amount paid as recorded in the payments table."
+      - name: total_installments
+        description: "Total number of payment installments."
+      - name: installment_status
+        description: "Whether all installments have been paid. Values: completed, ongoing."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['completed', 'ongoing']
+      - name: reconciliation_status
+        description: "Whether the payment amount matches the order total within 0.01. Values: reconciled, unreconciled."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['reconciled', 'unreconciled']
+      - name: time_to_carrier
+        description: "Days from order placement to carrier handoff. Null for non-delivered orders."
+      - name: time_to_customer
+        description: "Days from carrier handoff to customer delivery. Null for non-delivered orders."
+      - name: total_delivery_time
+        description: "Days from order placement to customer delivery. Null for non-delivered orders."
+      - name: delivery_performance
+        description: "Whether the order arrived on or before the estimated date. Values: on_time, late. Null for non-delivered orders."
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['on_time', 'late']
+      - name: review_score
+        description: "Customer rating on a scale of 1 to 5. Null if no review was submitted."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 5
+      - name: has_written_review
+        description: "True if the customer left a title or message alongside the score. Null if no review exists."
+      - name: days_to_review
+        description: "Days between delivery and review submission. Null if order was not delivered or no review exists."
+
+  - name: fct_seller_performance
+    description: "One row per seller. Combines seller identity and lead acquisition data with aggregated order metrics from active orders."
+    columns:
+      - name: seller_id
+        description: "Unique identifier for the seller."
+        data_tests:
+          - not_null
+          - unique
+      - name: seller_city
+        description: "City of the seller."
+      - name: seller_state
+        description: "State of the seller."
+      - name: lead_origin
+        description: "Acquisition channel for the seller's lead (e.g. organic_search, paid_search, social). Null if the seller has no associated lead."
+      - name: business_segment
+        description: "Business segment of the seller (e.g. home_decor, health_beauty). Null if no closed deal exists."
+      - name: lead_type
+        description: "Type of lead (e.g. online_top, online_beginner). Null if no closed deal exists."
+      - name: lead_behaviour_profile
+        description: "Behavioral profile of the lead (e.g. shark, cat, eagle). May contain multiple comma-separated values. Null if no closed deal exists."
+      - name: lead_created_at
+        description: "Timestamp when the seller's lead was first created. Null if no lead exists."
+      - name: closed_date
+        description: "Timestamp when the seller's deal was closed. Null if no closed deal exists."
+      - name: total_orders
+        description: "Number of distinct active orders fulfilled by this seller. Null if seller has no recorded orders."
+      - name: total_products
+        description: "Number of distinct products sold by this seller across active orders."
+      - name: total_revenue
+        description: "Sum of item prices across active orders fulfilled by this seller. Excludes freight."
+      - name: avg_item_price
+        description: "Average item price across all active order line items for this seller."
+      - name: avg_freight_value
+        description: "Average freight cost per item across active orders for this seller."
+
+  - name: fct_marketing_funnel
+    description: "One row per marketing qualified lead. Tracks the full funnel from lead creation through deal closure, including conversion status and time to close."
+    columns:
+      - name: lead_id
+        description: "Unique identifier for the marketing qualified lead."
+        data_tests:
+          - not_null
+          - unique
+      - name: seller_id
+        description: "Identifier for the seller associated with this lead after conversion. Null if the lead was not converted."
+      - name: lead_origin
+        description: "Acquisition channel for the lead (e.g. organic_search, paid_search, social)."
+        data_tests:
+          - not_null
+      - name: landing_page_id
+        description: "Identifier for the landing page that generated the lead."
+      - name: lead_created_at
+        description: "Timestamp when the lead was first created."
+        data_tests:
+          - not_null
+      - name: closed_date
+        description: "Timestamp when the deal was closed. Null for unconverted leads."
+      - name: business_segment
+        description: "Business segment of the closed deal. Null for unconverted leads."
+      - name: lead_type
+        description: "Type of lead (e.g. online_top, online_beginner). Null for unconverted leads."
+      - name: lead_behaviour_profile
+        description: "Behavioral profile of the lead. May contain multiple comma-separated values. Null for unconverted leads."
+      - name: has_company
+        description: "Whether the lead has formal company documentation."
+      - name: has_gtin
+        description: "Whether the lead has a GTIN for their products."
+      - name: is_converted
+        description: "True if the lead resulted in a closed deal, false otherwise."
+        data_tests:
+          - not_null
+      - name: days_to_close
+        description: "Days between lead creation and deal closure. Null for unconverted leads. One source record has a negative value (deal closed before lead creation date) — flagged as a warning."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                config:
+                  severity: warn
